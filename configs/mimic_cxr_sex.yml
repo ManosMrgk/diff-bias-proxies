@@ -58,7 +58,7 @@ pruning:                                                              # pruning 
   step_size: 1500
   max_steps: 10                                                         # maximum number of steps before early stopping
   stop_early: true
-  batch_size: 80                                                        # batch size for approximating neuron influence
+  batch_size: 40  #80                                                      # batch size for approximating neuron influence
   obj_lb: 0.65
 
 biasGrad:

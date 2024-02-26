@@ -1,6 +1,7 @@
 """
 Runs MIMIC-CXR experiments
 """
+import gc
 import argparse
 import json
 import logging
@@ -57,7 +58,7 @@ def main(config):
 
     # NOTE: replace with relevant directories
     if config['dataset'] == 'chestxray_mimic':
-        ROOT_DIR = '...'
+        ROOT_DIR = '/home/csi22304/diff-bias-proxies/'
     else:
         NotImplementedError('This chest X-ray dataset not supported!')
 
@@ -191,8 +192,12 @@ def main(config):
             logger.info(f'Results: {results_test["default"]}')
 
             # Get rid of data loaders to free up memory
-            dataloaders = None
-            dataset_sizes = None
+            # dataloaders = None
+            # dataset_sizes = None
+            del dataloaders
+            del dataset_sizes
+            torch.cuda.empty_cache()
+            gc.collect()
 
         # Evaluate random perturbation intra-processing
         if 'random' in config['models']:
@@ -351,9 +356,14 @@ def main(config):
                 logger.info(f'Results test: {results_test["ROC"]}')
 
                 # Get rid of data loaders to free up memory
-                dataloaders_roc = None
-                dataset_sizes_roc = None
-                ROC = None
+                # dataloaders_roc = None
+                # dataset_sizes_roc = None
+                # ROC = None
+                del dataloaders_roc
+                del dataset_sizes_roc
+                del ROC
+                torch.cuda.empty_cache()
+                gc.collect()
 
         # Evaluate the equality of odds post-processing
         if 'EqOdds' in config['models']:
@@ -420,9 +430,14 @@ def main(config):
             logger.info(f'Results test: {results_test["EqOdds"]}')
 
             # Get rid of data loaders to free up memory
-            dataloaders_eo = None
-            dataset_sizes_eo = None
-            eo = None
+            # dataloaders_eo = None
+            # dataset_sizes_eo = None
+            # eo = None
+            del dataloaders_eo
+            del dataset_sizes_eo
+            del eo
+            torch.cuda.empty_cache()
+            gc.collect()
 
         # Evaluate adversarial intra-processing
         if 'adversarial' in config['models']:
@@ -539,8 +554,12 @@ def main(config):
             logger.info(f'Results test: {results_test["adversarial"]}')
 
             # Get rid of data loaders to free up memory
-            dataloaders_adv = None
-            dataset_sizes_adv = None
+            # dataloaders_adv = None
+            # dataset_sizes_adv = None
+            del dataloaders_adv
+            del dataset_sizes_adv
+            torch.cuda.empty_cache()
+            gc.collect()
 
         # Evaluate adversarial in-processing
         if 'mitigating' in config['models']:
@@ -593,8 +612,12 @@ def main(config):
                 logger.info(f'Results test: {results_test["mitigating"]}')
 
                 # Get rid of data loaders to free up memory
-                dataloaders_mit = None
-                dataset_sizes_mit = None
+                # dataloaders_mit = None
+                # dataset_sizes_mit = None
+                del dataloaders_mit
+                del dataset_sizes_mit
+                torch.cuda.empty_cache()
+                gc.collect()
 
         # Evaluate bias gradient descent/ascent
         if 'biasGrad' in config['models']:
@@ -649,8 +672,10 @@ def main(config):
             logger.info(f'Results test: {results_test["biasGrad"]}')
 
             # Get rid of data loaders to free up memory
-            dataloaders_bgda = None
-            dataset_sizes_bgda = None
+            del dataloaders_bgda
+            del dataset_sizes_bgda
+            torch.cuda.empty_cache()
+            gc.collect()
 
         # NOTE: needs to be run the last, makes adjustments to the model object directly (to use less memory)
         # Evaluate pruning
@@ -712,8 +737,12 @@ def main(config):
             logger.info(f'Results test: {results_test["pruning"]}')
 
             # Get rid of data loaders to free up memory
-            dataloaders_pruning = None
-            dataset_sizes_pruning = None
+            # dataloaders_pruning = None
+            # dataset_sizes_pruning = None
+            del dataloaders_pruning
+            del dataset_sizes_pruning
+            gc.collect()
+            torch.cuda.empty_cache()
 
         # Save the results
         results_valid['config'] = config
@@ -732,7 +761,14 @@ def main(config):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', help='Path to configuration yaml file.')
+    parser.add_argument('--start_index', help='start_index')
+    parser.add_argument('--end_index', help='end_index')
     args = parser.parse_args()
     with open(args.config, 'r') as fh:
         config = yaml.load(fh, Loader=yaml.FullLoader)
+
+        if 'seed' in config and args.start_index and args.end_index:
+            config['seed'] = config['seed'][int(args.start_index):int(args.end_index)+1]
+    print(config)
+    print(args)
     main(config)

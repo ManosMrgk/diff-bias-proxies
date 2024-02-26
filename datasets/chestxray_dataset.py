@@ -7,7 +7,7 @@ notebook at notebooks/CXR_Mimic_Preprocessing.ipynb to pre-process the data
 import torch
 
 import numpy as np
-
+import os
 import pandas as pd
 
 from PIL import Image
@@ -73,15 +73,36 @@ def train_test_split_ChestXray_mimic(root_dir, prot_attr='gender', priv_class='M
                                      train_prot_ratio=0.75, seed=42,
                                      class_names=['Enlarged Cardiomediastinum', 'No Finding']):
     """Performs train-validation-test split for the MIMIC-CXR dataset"""
-    img_mat = np.load(root_dir + 'files_128.npy')
+    img_mat = None
+    for i in range(1, 2):
+        file_path = os.path.join(root_dir, f'res_dir/files_128_chunksmall4.npy')
+        # file_path = os.path.join(root_dir, f'res_dir/files_128_chunk{i}.npy')
+
+        try:
+            # Load each file
+            img_mat_chunk = np.load(file_path)
+
+            # Concatenate to the combined array
+            if img_mat is None:
+                img_mat = img_mat_chunk
+            else:
+                img_mat = np.concatenate([img_mat, img_mat_chunk], axis=0)
+        except Exception as e:
+            print(f"Error loading or concatenating file {file_path}: {e}")
+
+    # img_mat = np.load(root_dir + 'files_128.npy')
+    print("Size of img_mat:", img_mat.shape)
 
     df = pd.read_csv(root_dir + 'meta_data.csv')
+    print("Size of df:", df.shape)
     cnt_dis = len(df[df[class_names[0]] == 1])
     df = pd.concat([df[df[class_names[0]] == 1], df[df[class_names[1]] == 1].sample(n=int(cnt_dis))])
     print('Number of images total: ', len(df))
 
     # patient id split
+    print(df.head)
     patient_id = sorted(list(set(df['subject_id'])))
+    print("Patient len:", len(patient_id))
     train_val_split = 0.5
     test_val_split = 0.5
     train_idx, test_val_idx = train_test_split(patient_id, test_size=train_val_split, shuffle=True, random_state=seed)

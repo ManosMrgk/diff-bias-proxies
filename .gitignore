@@ -148,3 +148,5 @@ bin/results/figures
 
 bin/tmp/*
 /data/
+results/figures/
+results/logs/
