@@ -4,7 +4,7 @@ experiment_name: mimic_cxr_ethnicity_eod
 dataset: chestxray_mimic
 protected: ethnicity
 priv_class: WHITE
-unpriv_class: HISPANIC/LATINO
+unpriv_class: HISPANIC/LATINO - GUATEMALAN
 prot_ratio: 0.75
 disease: Pneumonia
 metric: eod
@@ -51,7 +51,7 @@ pruning:
   step_size: 1500
   max_steps: 10
   stop_early: true
-  batch_size: 80
+  batch_size: 40 #80
   obj_lb: 0.55
 biasGrad:
   lr: 0.0000075
